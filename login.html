@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Login</title>
+</head>
+<body>
+
+<h2>Register Patient</h2>
+<form id="registerForm">
+    Patient ID: <input type="text" id="patient_id"><br>
+    Name: <input type="text" id="name"><br>
+    Age: <input type="number" id="age"><br>
+    Gender: <input type="text" id="gender"><br>
+    Allergy: <input type="text" id="allergy"><br>
+    Symptoms: <input type="text" id="symptoms"><br>
+    Fingerprint: <input type="text" id="fingerprint"><br>
+    <button type="submit">Register</button>
+</form>
+
+<h2>Login with Fingerprint</h2>
+<form id="loginForm">
+    Fingerprint: <input type="text" id="loginFingerprint"><br>
+    <button type="submit">Login</button>
+</form>
+
+<div id="patientData"></div>
+
+<script>
+    // Register patient form submission
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const data = {
+            patient_id: document.getElementById('patient_id').value,
+            name: document.getElementById('name').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            allergy: document.getElementById('allergy').value,
+            symptoms: document.getElementById('symptoms').value,
+            fingerprint: document.getElementById('fingerprint').value
+        };
+        
+        fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => response.json())
+          .then(data => alert(data.message || data.error));
+    });
+
+    // Login form submission
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fingerprint = document.getElementById('loginFingerprint').value;
+        
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fingerprint })
+        }).then(response => response.json())
+          .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                let patientDataHtml = `<h3>Patient Data:</h3>
+                                       <p>Patient ID: ${data.patient_id}</p>
+                                       <p>Name: ${data.name}</p>
+                                       <p>Age: ${data.age}</p>
+                                       <p>Gender: ${data.gender}</p>
+                                       <h4>Allergy Details:</h4>`;
+                
+                data.allergy.forEach(allergy => {
+                    patientDataHtml += `<p>Allergy: ${allergy.Allergy_Name}</p>`;
+                });
+                
+                patientDataHtml += `<h4>Recommended Medications:</h4>`;
+                
+                data.medications.forEach(med => {
+                    patientDataHtml += `<p>Medication: ${med.Medication_Name} | Dosage: ${med.Dosage} | Duration: ${med.Duration} | Recovery Time: ${med.Recovery_Time_Days} Days</p>`;
+                });
+                
+                document.getElementById('patientData').innerHTML = patientDataHtml;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

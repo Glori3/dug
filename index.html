@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital System</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 50%; margin: auto; padding: 20px; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Hospital Patient Registration</h2>
+        <!-- Patient Registration Form -->
+        <input type="text" id="patient_id" placeholder="Patient ID">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="age" placeholder="Age">
+        <input type="text" id="gender" placeholder="Gender">
+        <input type="text" id="allergy" placeholder="Allergy Info">
+        <input type="text" id="symptoms" placeholder="Symptoms">
+        <input type="text" id="fingerprint" placeholder="Fingerprint Data">
+        <button onclick="registerPatient()">Register Patient</button>
+
+        <h2>Emergency Patient Lookup</h2>
+        <!-- Emergency Lookup Form -->
+        <input type="text" id="lookup_fingerprint" placeholder="Enter Fingerprint">
+        <button onclick="lookupPatient()">Find Patient</button>
+
+        <!-- Result of Emergency Lookup -->
+        <div id="result"></div>
+    </div>
+    <script>
+        // Function to register a new patient
+        function registerPatient() {
+            let data = {
+                patient_id: $('#patient_id').val(),
+                name: $('#name').val(),
+                age: $('#age').val(),
+                gender: $('#gender').val(),
+                allergy: $('#allergy').val(),
+                symptoms: $('#symptoms').val(),
+                fingerprint: $('#fingerprint').val()
+            };
+            // Send data to Flask backend (via POST request to /register)
+            $.ajax({
+                url: '/register',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    alert(response.message || response.error);
+                },
+                error: function(xhr, status, error) {
+                    alert("There was an error: " + error);
+                }
+            });
+        }
+
+        // Function to look up a patient in case of emergency
+        function lookupPatient() {
+            let data = { fingerprint: $('#lookup_fingerprint').val() };
+            // Send fingerprint data to Flask backend (via POST request to /emergency_lookup)
+            $.ajax({
+                url: '/emergency_lookup',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    if (response.error) {
+                        $('#result').html('<p style="color:red;">' + response.error + '</p>');
+                    } else {
+                        // Display patient details including allergy, symptoms, etc.
+                        let resultHtml = `
+                            <p><strong>Patient Found:</strong></p>
+                            <p>Name: ${response.name}</p>
+                            <p>Age: ${response.age}</p>
+                            <p>Gender: ${response.gender}</p>
+                            <p>Allergy: ${response.allergy}</p>
+                            <p>Symptoms: ${response.symptoms}</p>
+                            <p><strong>Recommended Medications:</strong></p>
+                            <p>Medication: ${response.medication}</p>
+                            <p>Dosage: ${response.dosage}</p>
+                            <p>Duration: ${response.duration}</p>
+                            <p>Recovery Time (Days): ${response.recovery_time_days}</p>
+                        `;
+                        $('#result').html(resultHtml);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("There was an error: " + error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
